@@ -1,8 +1,10 @@
 #!/usr/bin/python
 #Imports
+import sqlite3
 import tkinter
+import re
 from tkinter import *
-from tkinter.ttk import *
+from tkinter import ttk
 from pathlib import Path
 import getpass
 from time import strftime
@@ -12,6 +14,16 @@ from time import strftime
 username= getpass.getuser()
 listfile="/home/"+ username + "/.todo/.list"
 #Commands
+def strikethrough():
+    st=TaskViewer.curselection()
+    st1=TaskViewer.get(st)
+    i = 0
+    new_text = ''
+    while i < len(st1):
+        new_text = new_text + (st1[i] + u'\u0336')
+        i = i + 1
+    TaskViewer.delete(st)
+    TaskViewer.insert(st,new_text)
 def autosave():
     with open(Path(listfile),"w") as f:
         for i in TaskViewer.get(0, END):
@@ -44,14 +56,14 @@ myfile = Path(listfile)
 myfile.touch(exist_ok=True)
 wheight= List.winfo_screenheight()
 wwidth= List.winfo_screenwidth()
+
 #File Manager
 File = open(Path(listfile),"r")
 NewFile = File.readlines()
 File.close()
 NewFile= [data.rstrip() for data in NewFile]
 #Widgets
-count = 1
-
+Strike=tkinter.Button(List, text="Strikethrough", command = strikethrough)
 NewEntry=Entry(List, width = 50)
 addbutton = tkinter.Button(List, text='add', command = Addtolist)
 rmbutton = tkinter.Button(List, text= 'remove', command = rmslist)
@@ -66,15 +78,10 @@ for item in NewFile:
 List.bind('<Return>', enterkey )
 List.bind('<Delete>', deletekey)
 #grids
-addbutton.grid(row = 1, column =3)
-rmbutton.grid(row = 0, column = 3)
-TaskViewer.grid(row = 0, column  = 0, sticky=NSEW)
-scrollbar.grid(row=0, column =2, sticky=NS)
-NewEntry.grid(row = 1, column = 0, sticky=EW )
-List.grid_columnconfigure(0,weight=1)
-List.grid_columnconfigure(1,weight=1)
-List.grid_columnconfigure(2,weight=1)
-List.grid_columnconfigure(3,weight=1)
-List.grid_rowconfigure(0,weight=1)
-List.grid_rowconfigure(1,weight=1)
+Strike.grid(row=0, column=1)
+addbutton.grid(row = 2, column =1)
+rmbutton.grid(row = 0, column = 0)
+TaskViewer.grid(row = 1, column  = 0, sticky=NSEW)
+scrollbar.grid(row=1, column =1, sticky=NS)
+NewEntry.grid(row = 2, column = 0, sticky=EW )
 List.mainloop()
