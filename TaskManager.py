@@ -1,67 +1,62 @@
 #!/usr/bin/python
 #Imports
 import sqlite3
-import tkinter
-import re
+import tkinter 
 from tkinter import *
 from tkinter import ttk
-from pathlib import Path
-import getpass
-from time import strftime
 
-# Varaibles
 
-username= getpass.getuser()
-listfile="/home/"+ username + "/.todo/.list"
 #Commands
 def strikethrough():
     st=TaskViewer.curselection()
     st1=TaskViewer.get(st)
+    st2 = st1[3:]
     i = 0
     new_text = ''
-    while i < len(st1):
-        new_text = new_text + (st1[i] + u'\u0336')
+    while i < len(st2):
+        new_text = new_text + (st2[i] + u'\u0336')
         i = i + 1
     TaskViewer.delete(st)
     TaskViewer.insert(st,new_text)
-def autosave():
-    with open(Path(listfile),"w") as f:
-        for i in TaskViewer.get(0, END):
-            f.write( i+"\n")
+    con= sqlite3.connect('list.db')
+    cur = con.cursor()
+    cur.execute('delete from task where Task ='+ "'"+ st1[3:] +"'")
+    cur.execute('insert into task values' +"('"+ new_text + "')")
+    con.commit()
+
 def enterkey(l):
-    Task = NewEntry.get()
-    listlength=TaskViewer.size()
-    TaskViewer.insert(listlength+1,str(listlength + 1)+ ". " + Task)
-    with open(listfile,"a") as f:
-        f.write(str(listlength + 1) + ". "+Task+"\n")
+    Addtolist()
 def deletekey(a):
-    Rm = TaskViewer.curselection()
-    TaskViewer.delete(Rm)
-    autosave()
+    rmslist()
+    
 def Addtolist():
     Task = NewEntry.get()
     listlength=TaskViewer.size()
     TaskViewer.insert(listlength+1,str(listlength + 1)+ ". " + Task)
-    with open(listfile,"a") as f:
-        f.write(str(listlength + 1) + ". "+Task+"\n")
+    con= sqlite3.connect('list.db')
+    cur = con.cursor()
+    cur.execute('insert into task values' +"('"+ Task+ "')")
+    con.commit()
 def rmslist():
     Rm = TaskViewer.curselection()
+    Task = TaskViewer.get(Rm)
+    rm= Task[3:]
+    con= sqlite3.connect('list.db')
+    cur = con.cursor()
+    cur.execute('delete from task where Task ='+ "'"+ rm +"'")
+    con.commit()
     TaskViewer.delete(Rm)
-    autosave()
 #Window Maker
 List = Tk()
 List.resizable(False, False)
+List.geometry("525x490")
 List.title("Task List")
-myfile = Path(listfile)
-myfile.touch(exist_ok=True)
-wheight= List.winfo_screenheight()
-wwidth= List.winfo_screenwidth()
 
-#File Manager
-File = open(Path(listfile),"r")
-NewFile = File.readlines()
-File.close()
-NewFile= [data.rstrip() for data in NewFile]
+con= sqlite3.connect('list.db')
+cur = con.cursor()
+cur.execute('create table if not exists Task (task text)')
+con.commit
+
 #Widgets
 Strike=tkinter.Button(List, text="Strikethrough", command = strikethrough)
 NewEntry=Entry(List, width = 50)
@@ -71,17 +66,19 @@ TaskViewer=Listbox(List, width = 50, height = 25)
 scrollbar=Scrollbar(List)
 TaskViewer.config(yscrollcommand = scrollbar.set)
 scrollbar.config(orient=VERTICAL,command = TaskViewer.yview)
-
-for item in NewFile:
+scrollbar.set(20,200)
+for row in cur.execute('select * from task'):
+    clean = [data.rstrip() for data in row]
     listlength=TaskViewer.size()
-    TaskViewer.insert(listlength,item)
+    for i in clean:
+      TaskViewer.insert(listlength,str(listlength + 1)+". "+ i)
 List.bind('<Return>', enterkey )
 List.bind('<Delete>', deletekey)
 #grids
-Strike.grid(row=0, column=1)
-addbutton.grid(row = 2, column =1)
-rmbutton.grid(row = 0, column = 0)
-TaskViewer.grid(row = 1, column  = 0, sticky=NSEW)
-scrollbar.grid(row=1, column =1, sticky=NS)
-NewEntry.grid(row = 2, column = 0, sticky=EW )
+Strike.place(x=410, y=230)
+addbutton.place(x = 410, y =455)
+rmbutton.place(x = 410, y = 200)
+TaskViewer.place(x = 0, y  = 0)
+scrollbar.place(x=390, y =0, height=452)
+NewEntry.place(x = 0, y =460 )
 List.mainloop()
