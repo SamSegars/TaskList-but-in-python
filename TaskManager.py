@@ -7,17 +7,27 @@ from tkinter import ttk
 
 
 #Commands
+def reload():
+    TaskViewer.delete(0,END)
+    load()
+def load():
+    for row in cur.execute('select * from task'):
+        clean = [data.rstrip() for data in row]
+        listlength=TaskViewer.size()
+        for i in clean:
+            TaskViewer.insert(listlength,str(listlength + 1)+". "+ i)
 def strikethrough():
     st=TaskViewer.curselection()
     st1=TaskViewer.get(st)
     st2 = st1[3:]
+    Numb = st1[0:3]
     i = 0
     new_text = ''
     while i < len(st2):
         new_text = new_text + (st2[i] + u'\u0336')
         i = i + 1
     TaskViewer.delete(st)
-    TaskViewer.insert(st,new_text)
+    TaskViewer.insert(st,Numb + new_text)
     con= sqlite3.connect('list.db')
     cur = con.cursor()
     cur.execute('delete from task where Task ='+ "'"+ st1[3:] +"'")
@@ -37,6 +47,7 @@ def Addtolist():
     cur = con.cursor()
     cur.execute('insert into task values' +"('"+ Task+ "')")
     con.commit()
+    reload()
 def rmslist():
     Rm = TaskViewer.curselection()
     Task = TaskViewer.get(Rm)
@@ -46,6 +57,7 @@ def rmslist():
     cur.execute('delete from task where Task ='+ "'"+ rm +"'")
     con.commit()
     TaskViewer.delete(Rm)
+    reload()
 #Window Maker
 List = Tk()
 List.resizable(False, False)
@@ -67,11 +79,7 @@ scrollbar=Scrollbar(List)
 TaskViewer.config(yscrollcommand = scrollbar.set)
 scrollbar.config(orient=VERTICAL,command = TaskViewer.yview)
 scrollbar.set(20,200)
-for row in cur.execute('select * from task'):
-    clean = [data.rstrip() for data in row]
-    listlength=TaskViewer.size()
-    for i in clean:
-      TaskViewer.insert(listlength,str(listlength + 1)+". "+ i)
+load()
 List.bind('<Return>', enterkey )
 List.bind('<Delete>', deletekey)
 #grids
