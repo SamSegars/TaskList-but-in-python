@@ -9,10 +9,15 @@ from tkinter import ttk
 #Commands
 def reload():
     TaskViewer.delete(0,END)
+    Rowids.delete(0,END)
     load()
 
 def load():
-    for row in cur.execute('select * from task'):
+    for row in cur.execute('select rowid from task order by rowid'):
+        listlength=Rowids.size()
+        for i in row:
+            Rowids.insert(listlength,i)
+    for row in cur.execute('select * from task order by rowid'):
         clean = [data.rstrip() for data in row]
         listlength=TaskViewer.size()
         for i in clean:
@@ -22,6 +27,7 @@ def strikethrough():
     st=TaskViewer.curselection()
     st1=TaskViewer.get(st)
     st2 = st1[3:]
+    rowid=Rowids.get(st)
     Numb = st1[0:3]
     i = 0
     new_text = ''
@@ -32,13 +38,15 @@ def strikethrough():
     TaskViewer.insert(st,Numb + new_text)
     con= sqlite3.connect('list.db')
     cur = con.cursor()
-    cur.execute('Update Task set Task = '+"'"+ new_text + "'" +' where task =' + "'" + st2 + "'")
+    cur.execute('Update Task set Task = '+"'"+ new_text + "'" +' where rowid =' + "'" + str(rowid) + "'")
     con.commit()
+    reload()
 
 def SendtoBottom():
     st=TaskViewer.curselection()
     st1=TaskViewer.get(st)
     st2 = st1[3:]
+    Rowid=Rowids.get(st)
     Numb = st1[0:3]
     i = 0
     new_text = ''
@@ -50,7 +58,7 @@ def SendtoBottom():
     TaskViewer.insert(listlength+1,str(listlength + 1) + ". " + st2)
     con= sqlite3.connect('list.db')
     cur = con.cursor()
-    cur.execute('Update Task set Task = '+"'"+ new_text + "'" +' where task =' + "'" + st2 + "'")
+    cur.execute('Update Task set Task = '+"'"+ new_text + "'" +' where rowid =' +  str(Rowid))
     cur.execute('insert into task values' + "('"+ st2 + "')")
     con.commit()
     reload()
@@ -73,11 +81,10 @@ def Addtolist():
 
 def rmslist():
     Rm = TaskViewer.curselection()
-    Task = TaskViewer.get(Rm)
-    rm= Task[3:]
+    Task = Rowids.get(Rm)
     con= sqlite3.connect('list.db')
     cur = con.cursor()
-    cur.execute('delete from task where Task ='+ "'"+ rm +"'")
+    cur.execute('delete from task where rowid ='+ str(Task))
     con.commit()
     TaskViewer.delete(Rm)
     reload()
@@ -105,6 +112,7 @@ scrollbar=Scrollbar(List)
 TaskViewer.config(yscrollcommand = scrollbar.set)
 scrollbar.config(orient=VERTICAL,command = TaskViewer.yview)
 scrollbar.set(20,200)
+Rowids=Listbox(List)
 #Load Data
 load()
 #Key Bindings
