@@ -120,7 +120,7 @@ List.bind('<Return>', enterkey )
 List.bind('<Delete>', deletekey)
 #grids
 Strike.place(x=410, y=230)
-MTB.place(x=410, y=160)
+MTB.place(x=410, y=170)
 addbutton.place(x = 410, y =455)
 rmbutton.place(x = 410, y = 200)
 TaskViewer.place(x = 0, y  = 0)
