@@ -30,8 +30,7 @@ def strikethrough():
     TaskViewer.insert(st,Numb + new_text)
     con= sqlite3.connect('list.db')
     cur = con.cursor()
-    cur.execute('delete from task where Task ='+ "'"+ st1[3:] +"'")
-    cur.execute('insert into task values' +"('"+ new_text + "')")
+    cur.execute('Update Task set Task = '+"'"+ new_text + "'" +' where task =' + "'" + st2 + "'")
     con.commit()
 
 def enterkey(l):
